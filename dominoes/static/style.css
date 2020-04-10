@@ -68,3 +68,20 @@ a:link    {color: #F1C40F;}
 a:visited {color: #003961;}
 a:hover   {color: #ffffff;}
 a:active  {color: #33ccff;}
+
+.placeholder {
+    opacity: 0.3;
+}
+.selectable-domino img:hover {
+    box-shadow: 4px 4px 3px red;
+}
+.domino img {
+    vertical-align: middle;
+    margin: 3px;
+    box-shadow: 4px 4px 3px grey;
+}
+.selected {
+    border-style: dashed;
+    border-width: 2px;
+    border-color: blue;
+}

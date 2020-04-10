@@ -24,10 +24,13 @@
     <div id="content"> <!--Main content-->
         <h2>Board</h2>
 
-        <div id="board">
-        <table align="center">
-            <tr><td>[0|0]</td><td>[0|4]</td><td>[4|4]</td><td>[4|1]</td></tr>
-        </table>
+        <div id="board" align="center" class="domino">
+            <span ondrop="drop(event)" ondragover="allowDrop(event)"><img class="placeholder" src='/static/images/blank.png' /></span><span id="board-dominoes"></span><span ondrop="drop(event)" ondragover="allowDrop(event)"><img class="placeholder" src='/static/images/blank.png' /></span>
+        </div>
+
+        <hr>
+
+        <div id="stack" align="center">
         </div>
 
         <hr>

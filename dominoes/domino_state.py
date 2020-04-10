@@ -6,6 +6,7 @@ import random
 import json
 from dataclasses import dataclass
 
+
 @dataclass
 class Domino:
     l: int
@@ -29,6 +30,7 @@ class Domino:
 
 def get_starting_domino(dominoes: List[Domino]):
     return max(dominoes, key=Domino.get_sort_score)
+
 
 @dataclass
 class Player:
@@ -65,7 +67,7 @@ class DominoGame:
     def play_domino(self, domino: Domino, is_left: bool):
         current_player = self.players[self.next_player]
         current_player_dominoes = self.player_dominoes[self.next_player]
-        if not domino in current_player_dominoes:
+        if domino not in current_player_dominoes and domino.flip() not in current_player_dominoes:
             raise Exception("You don't have that domino")
 
         if is_left:
@@ -102,7 +104,8 @@ class DominoGame:
             "you": player,
             "player_number": player_number,
             "your_dominoes": self.player_dominoes[player_number],
-            "players": [{"number": i, "name": player.name, "dominoes": len(self.player_dominoes[i])} for i, player in enumerate(self.players)],
+            "players": [{"number": i, "name": player.name, "dominoes": len(self.player_dominoes[i])} for i, player in
+                        enumerate(self.players)],
             "next_player_number": self.next_player,
             "played_dominoes": self.played_dominoes,
             "remaining_dominoes": len(self.domino_stack),
@@ -112,6 +115,16 @@ class DominoGame:
     def __get_start_player(self):
         player_numbers = list(range(self.player_count))
         return max(player_numbers, key=lambda p: get_starting_domino(self.player_dominoes[p]).get_sort_score())
+
+    def get_points_stalemate(self):
+        scores = []
+        for player_number, dominoes in enumerate(self.player_dominoes):
+            person_score = 0
+            for domino in dominoes:
+                person_score += domino.l + domino.r
+            scores.append(person_score)
+        winner_player = min(range(0, self.player_count), key=lambda p: scores[p])
+        return {"winner_player": winner_player, "scores": scores}
 
     def __repr__(self):
         return f"""Game State: {self.id}
@@ -156,4 +169,4 @@ if __name__ == '__main__':
     print(view)
 
     print(json.dumps(view, cls=EnhancedJSONEncoder))
-
+    print(my_game.get_points_stalemate())

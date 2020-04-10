@@ -23,6 +23,11 @@ function display_game_state(state) {
     })
     document.getElementById("history").innerHTML = historyNode.innerHTML;
 
+    // Print board
+    document.getElementById("board-dominoes").innerHTML = display_board(state.played_dominoes)
+    //Print number of dominoes in stack
+    document.getElementById("stack").innerHTML = display_remaining_dominoes(state.remaining_dominoes)
+
     // Print players
     var my_player_number = state.player_number
     var next_player_number = state.next_player_number
@@ -50,8 +55,8 @@ function get_other_player_html(player, isPlayerTurn) {
     titleNode.appendChild(document.createTextNode(player.name));
     playerNode.appendChild(titleNode);
     var dominoes = document.createElement("p");
+    dominoes.className = "domino"
     for (var i = 0; i < player.dominoes; i++) {
-        var titleNode = document.createElement("h3");
         var dominoContainer = document.createElement("span")
         dominoContainer.innerHTML = get_blank_domino_html();
         dominoes.appendChild(dominoContainer)
@@ -72,25 +77,60 @@ function get_view_player_html(player, isPlayerTurn, your_dominoes) {
     playerNode.appendChild(titleNode);
     var dominoes = document.createElement("p");
     your_dominoes.forEach(function(domino) {
-        var titleNode = document.createElement("h3");
         var dominoContainer = document.createElement("span")
-        dominoContainer.innerHTML = get_domino_html(domino);
+        dominoContainer.className = "domino"
+        if (isPlayerTurn) {
+            dominoContainer.className = "domino selectable-domino"
+            dominoContainer.draggable = true
+            dominoContainer.ondragstart="drag(event)"
+        }
+        dominoContainer.innerHTML = get_domino_html(domino, false);
         dominoes.appendChild(dominoContainer)
     })
     playerNode.appendChild(dominoes);
 
     var turnNode = document.createElement("p")
-    turnNode.appendChild(document.createTextNode(isPlayerTurn ? "Your turn" : ""))
+    turnNode.appendChild(document.createTextNode(isPlayerTurn ? "Click and drag a domino" : ""))
     playerNode.appendChild(turnNode)
 
 
     return playerNode.innerHTML
 }
 
-function get_domino_html(domino) {
-    return "[" + domino.l + "|" + domino.r + "]"
+function display_board(played_dominoes){
+    var dominoes = document.createElement("span");
+    played_dominoes.forEach(function(domino) {
+        var dominoContainer = document.createElement("span")
+        dominoContainer.innerHTML = get_domino_html(domino, true);
+        dominoes.appendChild(dominoContainer)
+    })
+    return dominoes.innerHTML
+ }
+
+ function display_remaining_dominoes(remaining_dominoes){
+    var dominoes = document.createElement("span");
+    var text = document.createTextNode("Dominoes in stack: " + remaining_dominoes)
+    dominoes.appendChild(text)
+    return dominoes.innerHTML
+ }
+
+
+function get_domino_html(domino, onBoard) {
+    var suffix = "";
+    if (domino.l == domino.r && onBoard) {
+        suffix = "-90"
+    }
+    return "<img src='/static/images/" + domino.l + "-" + domino.r + suffix + ".png' />"
 }
 
 function get_blank_domino_html() {
-    return "[&nbsp;&nbsp;&nbsp;]"
+    return "<img src='/static/images/back.png' />"
+}
+
+function allowDrop(ev) {
+    ev.preventDefault();
+}
+
+function drag(ev) {
+  ev.dataTransfer.setData("text", ev.target.id);
 }
