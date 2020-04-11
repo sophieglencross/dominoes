@@ -1,73 +1,10 @@
-#container /*Styles for Container*/
-{
-	width:100%;
-	margin: auto; /*Centres the main container*/
-	border:1px solid gray;
-	background-color: #BB8FCE;
-}
-
-#header /*Styles for Header*/
-{
-
-	padding: 15px;
-	color:#1F618D;
-	font-family: Arial, Verdana, sans-serif;
-    font-size: 16px;
-	background-color: #BB8FCE;
-}
-
-#banner
-{
-	padding:0;
-	margin:0;
-}
-
-#navbar
-{
-	float:left; /*Moves the container to the left*/
-	width:240px;
-	margin:0;
-	border-style: groove;
-	padding:10px;
-	color:#1F618D;
-	font-family: Arial, Verdana, sans-serif;
-    font-size: 10px;
-}
-
-#content
-{
-	margin-left:270px;
-	padding:10px;
-    border-style: groove;
-	font-family: Arial, Verdana, sans-serif;
-    font-size: 16px;
-	background-color: #BB8FCE;
-	color:#1F618D;
-}
-
-
 #board
 {
 	padding:10px;
     border-style: groove;
-	font-family: Arial, Verdana, sans-serif;
-    font-size: 24px;
 	background-color: #bbbbbb;
 	color:#000000;
 }
-
-.current-player
-{
-    border: 1;
-	border-style: groove;
-	border-color: red;
-}
-
-/*Styles for links*/
-a:link    {color: #F1C40F;}
-a:visited {color: #003961;}
-a:hover   {color: #ffffff;}
-a:active  {color: #33ccff;}
 
 .placeholder {
     opacity: 0.3;

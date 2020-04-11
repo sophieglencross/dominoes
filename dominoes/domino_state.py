@@ -7,6 +7,10 @@ import json
 from dataclasses import dataclass
 
 
+class InvalidMoveException(Exception):
+    def __init__(self, message):
+        self.message = message
+
 @dataclass
 class Domino:
     l: int
@@ -42,6 +46,7 @@ class Player:
         return f"Player {self.name}"
 
 
+
 class DominoGame:
     def __init__(self, id: str, players: List[Player], dominoes: List[Domino]):
         assert 2 <= len(players) <= 4
@@ -53,52 +58,103 @@ class DominoGame:
         self.history = []
         self.played_dominoes = []
         self.next_player = None
+        self.has_picked_up = False
 
     def start_game(self):
         for i in range(0, 7):
             for player_num in range(0, self.player_count):
                 self.player_dominoes[player_num].append(self.domino_stack.pop())
         self.next_player = self.__get_start_player()
+        self.has_picked_up = False
         self.add_event(None, f"Game starts")
 
         starting_domino = get_starting_domino(self.player_dominoes[self.next_player])
-        self.play_domino(starting_domino, True)
+        self.__play_domino(starting_domino, True)
 
-    def play_domino(self, domino: Domino, is_left: bool):
+    def play_domino(self, current_user, domino: Domino, is_left: bool):
+        self.assert_current_user(current_user)
+        self.__play_domino(domino, is_left)
+
+    def __play_domino(self, domino: Domino, is_left: bool):
         current_player = self.players[self.next_player]
         current_player_dominoes = self.player_dominoes[self.next_player]
         if domino not in current_player_dominoes and domino.flip() not in current_player_dominoes:
-            raise Exception("You don't have that domino")
+            raise InvalidMoveException("You don't have that domino.")
 
         if is_left:
-            if self.played_dominoes and self.played_dominoes[0].left != domino.r:
-                if self.played_dominoes[0].left == domino.l:
+            if self.played_dominoes and self.played_dominoes[0].l != domino.r:
+                if self.played_dominoes[0].l == domino.l:
                     domino.flip()
                 else:
-                    raise Exception("You cannot play that domino here")
-            current_player_dominoes.remove(domino)
+                    raise InvalidMoveException("You cannot play that domino here.")
+            self.player_dominoes[self.next_player] = [d for d in current_player_dominoes if (domino.l, domino.r) not in [(d.l, d.r), (d.r, d.l)]]
             self.played_dominoes.insert(0, domino)
         else:
-            if self.played_dominoes and self.played_dominoes[-1].right != domino.l:
-                if self.played_dominoes[-1].right == domino.r:
+            if self.played_dominoes and self.played_dominoes[-1].r != domino.l:
+                if self.played_dominoes[-1].r == domino.r:
                     domino.flip()
                 else:
-                    raise Exception("You cannot play that domino here")
-            current_player_dominoes.remove(domino)
+                    raise Exception("You cannot play that domino here.")
+            self.player_dominoes[self.next_player] = [d for d in current_player_dominoes if (domino.l, domino.r) not in [(d.l, d.r), (d.r, d.l)]]
             self.played_dominoes.append(domino)
 
         self.add_event(current_player, f"{current_player.name} played domino {domino}")
+        self.goto_next_player()
+
+    def goto_next_player(self):
         self.next_player += 1
         if self.next_player >= self.player_count:
             self.next_player = 0
+        self.has_picked_up = False
+
+    def pick_up(self, current_user):
+
+        self.assert_current_user(current_user)
+
+        current_player = self.players[self.next_player]
+        current_player_dominoes = self.player_dominoes[self.next_player]
+
+        if self.has_picked_up:
+            raise InvalidMoveException("You have already picked up a domino this turn.")
+
+        if not self.domino_stack:
+            raise InvalidMoveException("There are no dominoes left in the stack.")
+
+        picked_domino = self.domino_stack.pop()
+        current_player_dominoes.append(picked_domino)
+
+        self.has_picked_up = True
+        self.add_event(current_player, f"{current_player.name} picked up a domino")
+
+        return picked_domino
+
+
+    def pass_turn(self, current_user):
+
+        self.assert_current_user(current_user)
+
+        current_player = self.players[self.next_player]
+        current_player_dominoes = self.player_dominoes[self.next_player]
+
+        if not self.has_picked_up and self.domino_stack:
+            raise InvalidMoveException("You must pick up before passing.")
+
+
+        self.add_event(current_player, f"{current_player.name} has passed")
+        self.goto_next_player()
+
+    def assert_current_user(self, current_user):
+        current_player = self.players[self.next_player]
+        if current_user.email != current_player.email:
+            raise InvalidMoveException(f"It is not your turn. It is {current_player.name}'s turn.")
 
     def add_event(self, player, text):
         event = (datetime.now().strftime("%H:%M:%S"), text)
         print(event)
         self.history.append(event)
 
-    def get_view(self, player_token):
-        player = self.find_player_by_token(player_token)
+    def get_view(self, current_user):
+        player = self.find_player_by_user(current_user)
         player_number = self.players.index(player)
         return {
             "you": player,
@@ -109,6 +165,7 @@ class DominoGame:
             "next_player_number": self.next_player,
             "played_dominoes": self.played_dominoes,
             "remaining_dominoes": len(self.domino_stack),
+            "can_pick_up": self.domino_stack and not self.has_picked_up,
             "history": self.history
         }
 
@@ -134,10 +191,10 @@ next_player={self.players[self.next_player]}
 played_dominoes={self.played_dominoes}
 """
 
-    def find_player_by_token(self, player_token):
-        matching_players = [player for player in self.players if player.token == player_token]
+    def find_player_by_user(self, current_user):
+        matching_players = [player for player in self.players if player.email == current_user.email]
         if not matching_players:
-            raise Exception("Player not found with token")
+            raise Exception("Player not found with email " + current_user.email)
         return matching_players[0]
 
 
@@ -156,17 +213,3 @@ class EnhancedJSONEncoder(json.JSONEncoder):
             return dataclasses.asdict(o)
         return super().default(o)
 
-
-if __name__ == '__main__':
-    my_game = DominoGame("1234abc", [
-        Player("Sophie", "sophie@glencross.org", secrets.token_hex()),
-        Player("Chris", "chris@glencross.org", secrets.token_hex()),
-    ], get_shuffled_dominoes())
-    my_game.start_game()
-    print(my_game)
-    view = my_game.get_view(my_game.players[0].token)
-
-    print(view)
-
-    print(json.dumps(view, cls=EnhancedJSONEncoder))
-    print(my_game.get_points_stalemate())
