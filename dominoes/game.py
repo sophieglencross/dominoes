@@ -1,3 +1,5 @@
+import secrets
+
 from dominoes.domino_state import *
 
 current_game = None

@@ -37,6 +37,7 @@ def create_app():
 
     return app
 
+
 if __name__ == '__main__':
     app = create_app()
-    app.run(host="localhost", port=8080)
+    app.run(host="192.168.0.206", port=8080)

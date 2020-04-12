@@ -4,31 +4,14 @@
 
 <div class="columns"> <!--Page container-->
 
-    <div class="column is-one-fifth">
-        <article class="panel is-primary">
-            <p class="panel-heading">
-                Game history
-            </p>
-            <div class="panel-block">
-                 <div id="history" class="content has-text-left is-size-7">
-                 </div>
-            </div>
-        </article>
-    </div>
-
-    <div class="column is-four-fifths"> <!--Main content-->
+    <div class="column <is-four-fifths>"> <!--Main content-->
 
         <div id="board" align="center" class="domino">
             <span><img ondrop="dropLeft(event)" ondragover="allowDropLeft(event)" class="placeholder" src='/static/images/blank.png' /></span><span id="board-dominoes"></span><span><img ondrop="dropRight(event)" ondragover="allowDropRight(event)" class="placeholder" src='/static/images/blank.png' /></span>
         </div>
-
-        <hr>
-
-        <div id="stack" align="center">
+        <div id="winner-message">
         </div>
-
-        <hr>
-
+        <hr />
         <div class="columns">
             <div class="column is-half">
                 <article id="player0" class="panel">
@@ -52,11 +35,28 @@
 
     </div>
 
+    <div class="column is-one-fifth">
+        <article class="panel">
+            <p id="stack" class="panel-heading">
+            </p>
+        </article>
+        <article class="panel is-primary">
+            <p class="panel-heading">
+                Game history
+            </p>
+            <div class="panel-block">
+                <div id="history" class="content has-text-left is-size-7">
+                </div>
+            </div>
+        </article>
+    </div>
+
 </div> <!--Closing container div-->
 
 
 <script>
 get_game_state();
+window.setInterval(get_game_state, 5000);
 </script>
 
 {% endblock %}
