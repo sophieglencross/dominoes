@@ -163,12 +163,16 @@ class DominoGame:
         for player_number, dominoes in enumerate(self.player_dominoes):
             if len(dominoes) == 0:
                 self.player_won(player_number, f"has gone out.")
+                return True
 
         if False not in self.player_passed and len(self.domino_stack) == 0:
             winner_details = self.get_points_stalemate()
             winner_player_number = winner_details["winner_player"]
             winner_player_points = winner_details["scores"][winner_player_number]
             self.player_won(winner_player_number, f"has {winner_player_points} points after all players passed.")
+            return True
+
+        return False
 
     def player_won(self, player_number, message):
         self.game_finished = True
