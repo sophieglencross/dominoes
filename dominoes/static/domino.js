@@ -1,3 +1,7 @@
+const urlParams = new URLSearchParams(window.location.search);
+let gameId = urlParams.get('gameId');
+let last_update = null;
+
 function get_game_state() {
     const xmlHttp = new XMLHttpRequest();
     xmlHttp.onreadystatechange = function () {
@@ -6,7 +10,8 @@ function get_game_state() {
             display_game_state(state);
         }
     };
-    xmlHttp.open("GET", "/view", true); // true for asynchronous
+    const url = gameId ? "/view?game_id=" + gameId : "/view";
+    xmlHttp.open("GET", url, true); // true for asynchronous
     xmlHttp.send(null);
 }
 
@@ -48,6 +53,7 @@ function submitMove(isLeft, leftSpots, rightSpots) {
     formData.append("domino_left", leftSpots);
     formData.append("domino_right", rightSpots);
     formData.append("is_left", isLeft);
+    formData.append("game_id", gameId);
     post("/submit-move", formData);
 }
 
@@ -70,17 +76,33 @@ function dropRight(ev) {
 }
 
 function submitPickUp() {
-    post("/pick-up", null)
+    let formData = new FormData()
+    formData.append("game_id", gameId);
+    post("/pick-up", formData)
 }
 
 function submitPass() {
-    post("/pass", null);
+    let formData = new FormData()
+    formData.append("game_id", gameId);
+    post("/pass", formData);
 }
 
-let last_update = null
+function submitStartGame() {
+    let formData = new FormData()
+    formData.append("game_id", gameId);
+    post("/start-game", formData)
+}
+
+function joinNewGame() {
+    let formData = new FormData()
+    post("/join-any-game", formData)
+}
 
 function display_game_state(state) {
 
+    if (state.game_id !== null) {
+        gameId = state.game_id
+    }
     // Don't display if nothing changed
     if (state.last_update === last_update) {
         return
@@ -101,12 +123,14 @@ function display_game_state(state) {
     //Print number of dominoes in stack
     document.getElementById("stack").innerHTML = display_remaining_dominoes(state.remaining_dominoes);
 
-    // Print winner message
-    if (state.winner_message) {
+    if (!state.is_started) {
+        const canStartGame = state.players.length > 1;
+        document.getElementById("big-message").innerHTML = display_start_game_message(canStartGame);
+    } else if (state.winner_message) {
         const is_me = state.winner === state.player_number
-        document.getElementById("winner-message").innerHTML = display_winner_message(is_me, state.winner_message);
+        document.getElementById("big-message").innerHTML = display_winner_message(is_me, state.winner_message);
     } else {
-        document.getElementById("winner-message").innerHTML = "";
+        document.getElementById("big-message").innerHTML = "";
     }
 
     // Print players
@@ -128,8 +152,12 @@ function display_game_state(state) {
         } else {
             playerNode.className = "panel"
         }
-
     })
+    // Clear any other players
+    for (let i = state.players.length; i < 4; i++) {
+        const playerNode = document.getElementById("player" + i);
+        playerNode.innerHTML = "";
+    }
 
 }
 
@@ -228,6 +256,27 @@ function display_board(played_dominoes) {
     return dominoes.innerHTML
 }
 
+
+function display_start_game_message(canStartGame) {
+    const article = document.createElement("article");
+    article.className = "panel is-success"
+
+    const heading = document.createElement("p");
+    heading.className = "panel-heading";
+    heading.appendChild(document.createTextNode("Waiting for more players..."))
+    article.appendChild(heading)
+
+    if (canStartGame) {
+        const controls = document.createElement("p");
+        controls.className = "has-text-centered";
+        article.appendChild(controls);
+        controls.innerHTML = "<button class='button is-primary' onclick='submitStartGame()'>Start Game</button>";
+    }
+
+    return article.outerHTML;
+}
+
+
 function display_winner_message(is_you, message) {
     const article = document.createElement("article");
     if (is_you) {
@@ -240,6 +289,11 @@ function display_winner_message(is_you, message) {
     heading.className = "panel-heading";
     heading.appendChild(document.createTextNode("WINNER! " + message))
     article.appendChild(heading)
+
+    const controls = document.createElement("p");
+    controls.className = "has-text-centered";
+    article.appendChild(controls);
+    controls.innerHTML = "<button class='button is-primary' onclick='joinNewGame()'>New Game</button>";
 
     return article.outerHTML;
 }

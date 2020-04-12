@@ -1,13 +1,15 @@
 import dataclasses
 from datetime import datetime
-from typing import List
+from typing import List, Tuple
 import random
 import json
 from dataclasses import dataclass
 
+
 class InvalidMoveException(Exception):
     def __init__(self, message):
         self.message = message
+
 
 @dataclass
 class Domino:
@@ -36,40 +38,52 @@ def get_starting_domino(dominoes: List[Domino]):
 
 @dataclass
 class Player:
+    user_id: int
     name: str
-    email: str
-    token: str
 
     def __repr__(self):
         return f"Player {self.name}"
 
 
-
 class DominoGame:
-    def __init__(self, id: str, players: List[Player], dominoes: List[Domino]):
-        assert 2 <= len(players) <= 4
-        self.id = id
-        self.players = players
-        self.player_count = len(self.players)
-        self.player_dominoes = [list() for i in range(self.player_count)]
-        self.player_passed = [False] * self.player_count
+    def __init__(self, game_id: str, dominoes: List[Domino]):
+        self.game_id = game_id
+        self.is_started = False
+        self.is_finished = False
+        self.player_count = 0
+        self.players: List[Player] = []
+        self.player_passed: List[bool] = []
+        self.player_dominoes: List[List[Domino]] = []
         self.domino_stack = dominoes
-        self.history = []
-        self.played_dominoes = []
+        self.history: List[Tuple[str, str]] = []
+        self.played_dominoes: List[Domino] = []
         self.current_player_number = None
         self.has_picked_up = False
         self.last_update_time = datetime.now()
-        self.game_finished = True
         self.winner = None
         self.winner_message = None
 
+    def add_player(self, player: Player):
+        if self.is_started:
+            raise InvalidMoveException("Game has already started.")
+        if self.player_count == 4:
+            raise InvalidMoveException("Game already has a maximum of 4 players.")
+        self.player_count += 1
+        self.players.append(player)
+        self.player_passed.append(False)
+        self.player_dominoes.append([])
+
     def start_game(self):
+        if self.player_count < 2:
+            raise InvalidMoveException("Game requires at least two players to start.")
         for i in range(0, 7):
             for player_num in range(0, self.player_count):
                 self.player_dominoes[player_num].append(self.domino_stack.pop())
         self.current_player_number = self.__get_start_player()
         self.has_picked_up = False
-        self.add_event(None, f"Game starts")
+        self.is_started = True
+        self.player_passed = [False] * self.player_count
+        self.add_event(None, f"Game started")
 
         starting_domino = get_starting_domino(self.player_dominoes[self.current_player_number])
         self.__play_domino(starting_domino, True)
@@ -90,7 +104,8 @@ class DominoGame:
                     domino.flip()
                 else:
                     raise InvalidMoveException("You cannot play that domino here.")
-            self.player_dominoes[self.current_player_number] = [d for d in current_player_dominoes if (domino.l, domino.r) not in [(d.l, d.r), (d.r, d.l)]]
+            self.player_dominoes[self.current_player_number] = [d for d in current_player_dominoes if
+                                                                (domino.l, domino.r) not in [(d.l, d.r), (d.r, d.l)]]
             self.played_dominoes.insert(0, domino)
         else:
             if self.played_dominoes and self.played_dominoes[-1].r != domino.l:
@@ -98,7 +113,8 @@ class DominoGame:
                     domino.flip()
                 else:
                     raise InvalidMoveException("You cannot play that domino here.")
-            self.player_dominoes[self.current_player_number] = [d for d in current_player_dominoes if (domino.l, domino.r) not in [(d.l, d.r), (d.r, d.l)]]
+            self.player_dominoes[self.current_player_number] = [d for d in current_player_dominoes if
+                                                                (domino.l, domino.r) not in [(d.l, d.r), (d.r, d.l)]]
             self.played_dominoes.append(domino)
 
         self.add_event(current_player, f"{current_player.name} played domino {domino}")
@@ -150,7 +166,7 @@ class DominoGame:
 
     def assert_current_user(self, current_user):
         current_player = self.players[self.current_player_number]
-        if current_user.email != current_player.email:
+        if current_user.id != current_player.user_id:
             raise InvalidMoveException(f"It is not your turn. It is {current_player.name}'s turn.")
 
     def add_event(self, player, text):
@@ -175,7 +191,7 @@ class DominoGame:
         return False
 
     def player_won(self, player_number, message):
-        self.game_finished = True
+        self.is_finished = True
         self.winner = player_number
         self.winner_message = f"{self.players[self.winner].name} {message}"
 
@@ -183,6 +199,9 @@ class DominoGame:
         player = self.find_player_by_user(current_user)
         player_number = self.players.index(player)
         return {
+            "game_id": self.game_id,
+            "is_started": self.is_started,
+            "is_finished": self.is_finished,
             "last_update": str(self.last_update_time),
             "you": player,
             "player_number": player_number,
@@ -194,7 +213,6 @@ class DominoGame:
             "remaining_dominoes": len(self.domino_stack),
             "can_pick_up": len(self.domino_stack) > 0 and not self.has_picked_up,
             "history": self.history,
-            "game_finished": self.game_finished,
             "winner": self.winner,
             "winner_message": self.winner_message
         }
@@ -222,9 +240,9 @@ played_dominoes={self.played_dominoes}
 """
 
     def find_player_by_user(self, current_user):
-        matching_players = [player for player in self.players if player.email == current_user.email]
+        matching_players = [player for player in self.players if player.user_id == current_user.id]
         if not matching_players:
-            raise Exception("Player not found with email " + current_user.email)
+            raise Exception("Player not found with id " + current_user.id)
         return matching_players[0]
 
 
@@ -242,4 +260,3 @@ class EnhancedJSONEncoder(json.JSONEncoder):
         if dataclasses.is_dataclass(o):
             return dataclasses.asdict(o)
         return super().default(o)
-
