@@ -62,6 +62,7 @@ class DominoGame:
         self.last_update_time = datetime.now()
         self.winner = None
         self.winner_message = None
+        self.add_event(None, "Game created")
 
     def add_player(self, player: Player):
         if self.is_started:
@@ -72,6 +73,7 @@ class DominoGame:
         self.players.append(player)
         self.player_passed.append(False)
         self.player_dominoes.append([])
+        self.add_event(player, f"{player.name} has joined the game.")
 
     def start_game(self):
         if self.player_count < 2:
