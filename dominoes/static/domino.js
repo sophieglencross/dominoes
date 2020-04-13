@@ -75,6 +75,10 @@ function dropRight(ev) {
     submitMove(false, l, r)
 }
 
+function showDragHelp() {
+    alert("Drag a domino to one of the grey placeholders on the board to play it.")
+}
+
 function submitPickUp() {
     let formData = new FormData()
     formData.append("game_id", gameId);
@@ -224,9 +228,8 @@ function get_view_player_html(player, isPlayerTurn, your_dominoes, can_pick_up) 
         const controls = document.createElement("div");
         controls.className = "has-text-centered";
 
-        const dragDomino = document.createElement("button");
-        dragDomino.className = "button is-success";
-        dragDomino.appendChild(document.createTextNode("Drag Domino"));
+        const dragDomino = document.createElement("span");
+        dragDomino.innerHTML = "<button class='button is-success' onclick='showDragHelp()'>Drag Domino</button>";
         controls.appendChild(dragDomino);
         controls.appendChild(document.createTextNode(" "));
 
