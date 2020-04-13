@@ -78,6 +78,10 @@ class DominoGame:
     def start_game(self):
         if self.player_count < 2:
             raise InvalidMoveException("Game requires at least two players to start.")
+
+        if self.is_started:
+            raise InvalidMoveException("The game has already been started.")
+
         for i in range(0, 7):
             for player_num in range(0, self.player_count):
                 self.player_dominoes[player_num].append(self.domino_stack.pop())
@@ -85,7 +89,7 @@ class DominoGame:
         self.has_picked_up = False
         self.is_started = True
         self.player_passed = [False] * self.player_count
-        self.add_event(None, f"Game started")
+        self.add_event(None, f"{self.player.name} started the game.")
 
         starting_domino = get_starting_domino(self.player_dominoes[self.current_player_number])
         self.__play_domino(starting_domino, True)
