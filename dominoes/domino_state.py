@@ -75,7 +75,7 @@ class DominoGame:
         self.player_dominoes.append([])
         self.add_event(player, f"{player.name} has joined the game.")
 
-    def start_game(self):
+    def start_game(self, current_user):
         if self.player_count < 2:
             raise InvalidMoveException("Game requires at least two players to start.")
 
@@ -89,7 +89,7 @@ class DominoGame:
         self.has_picked_up = False
         self.is_started = True
         self.player_passed = [False] * self.player_count
-        self.add_event(None, f"{self.player.name} started the game.")
+        self.add_event(None, f"{current_user.name} started the game.")
 
         starting_domino = get_starting_domino(self.player_dominoes[self.current_player_number])
         self.__play_domino(starting_domino, True)

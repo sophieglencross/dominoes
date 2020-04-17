@@ -75,7 +75,7 @@ def start_game():
     game_id = request.form.get('game_id')
     try:
         my_game = get_current_game(current_user, game_id)
-        my_game.start_game()
+        my_game.start_game(current_user)
     except InvalidMoveException as ex:
         return ex.message, HTTPStatus.NOT_ACCEPTABLE.value
 
