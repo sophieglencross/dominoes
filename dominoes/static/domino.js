@@ -2,6 +2,15 @@ const urlParams = new URLSearchParams(window.location.search);
 let gameId = urlParams.get('gameId');
 let last_update = null;
 
+window.addEventListener("dragover",function(e){
+    e = e || event;
+    e.preventDefault();
+},false);
+window.addEventListener("drop",function(e){
+    e = e || event;
+    e.preventDefault();
+},false);
+
 function get_game_state() {
     const xmlHttp = new XMLHttpRequest();
     xmlHttp.onreadystatechange = function () {
@@ -80,7 +89,7 @@ function showDragHelp() {
 }
 
 function submitPickUp() {
-    let formData = new FormData()
+    let formData = new FormData();
     formData.append("game_id", gameId);
     post("/pick-up", formData)
 }
