@@ -138,7 +138,6 @@ class DominoGame:
         self.player_passed[self.current_player_number] = False
 
     def pick_up(self, current_user):
-
         self.assert_current_user(current_user)
 
         current_player = self.players[self.current_player_number]
@@ -159,6 +158,8 @@ class DominoGame:
         return picked_domino
 
     def pass_turn(self, current_user):
+
+
         self.assert_current_user(current_user)
 
         current_player = self.players[self.current_player_number]
@@ -171,6 +172,8 @@ class DominoGame:
         self.end_turn()
 
     def assert_current_user(self, current_user):
+        if self.is_finished:
+            raise InvalidMoveException("The game has finished.")
         current_player = self.players[self.current_player_number]
         if current_user.id != current_player.user_id:
             raise InvalidMoveException(f"It is not your turn. It is {current_player.name}'s turn.")
