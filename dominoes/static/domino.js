@@ -325,7 +325,7 @@ function get_domino_html(domino, onBoard, draggable) {
     if (domino.l === domino.r && onBoard) {
         suffix = "-90"
     }
-    return "<img alt='domino " + domino.r + " " + domino.r + "' src='/static/images/" + domino.l + "-" + domino.r + suffix + ".png' " +
+    return "<img alt='domino " + domino.l + " " + domino.r + "' src='/static/images-christmas/" + domino.l + "-" + domino.r + suffix + ".png' " +
         "id='domino-" + domino.l + "-" + domino.r + "' " +
         "data-left='" + domino.l + "' " +
         "data-right='" + domino.r + "' " +
@@ -334,6 +334,6 @@ function get_domino_html(domino, onBoard, draggable) {
 }
 
 function get_blank_domino_html() {
-    return "<img alt='hidden domino' src='/static/images/back.png' draggable=false />"
+    return "<img alt='hidden domino' src='/static/images-christmas/back.png' draggable=false />"
 }
 
